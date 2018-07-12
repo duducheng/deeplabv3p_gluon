@@ -40,10 +40,6 @@ from keras.engine import Layer
 from keras.engine import InputSpec
 from keras import backend as K
 from keras.utils import conv_utils
-from keras.utils.data_utils import get_file
-
-WEIGHTS_PATH_X = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_xception_tf_dim_ordering_tf_kernels.h5"
-WEIGHTS_PATH_MOBILE = "https://github.com/bonlime/keras-deeplab-v3-plus/releases/download/1.1/deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5"
 
 
 class BilinearUpsampling(Layer):
@@ -211,8 +207,7 @@ def _xception_block(inputs, depth_list, prefix, skip_connection_type, stride,
         return outputs
 
 
-def Deeplabv3(weights='pascal_voc', input_shape=(512, 512, 3), classes=21,
-              OS=16):
+def Deeplabv3(classes=21, input_shape=(512, 512, 3), OS=16, last_layer_name='logits_semantic'):
     """ Instantiates the Deeplabv3+ architecture
 
     Optionally loads weights pre-trained
@@ -222,13 +217,10 @@ def Deeplabv3(weights='pascal_voc', input_shape=(512, 512, 3), classes=21,
     # Arguments
         weights: one of 'pascal_voc' (pre-trained on pascal voc)
             or None (random initialization)
-        input_tensor: optional Keras tensor (i.e. output of `layers.Input()`)
-            to use as image input for the model.
         input_shape: shape of input image. format HxWxC
             PASCAL VOC model was trained on (512,512,3) images
         classes: number of desired classes. If classes != 21,
             last layer is initialized randomly
-        backbone: backbone to use. one of {'xception','mobilenetv2'}
         OS: determines input_shape/feature_extractor_output ratio. One of {8,16}.
             Used only for xception backbone.
 
@@ -242,10 +234,7 @@ def Deeplabv3(weights='pascal_voc', input_shape=(512, 512, 3), classes=21,
 
     """
 
-    if not (weights in {'pascal_voc', None}):
-        raise ValueError('The `weights` argument should be either '
-                         '`None` (random initialization) or `pascal_voc` '
-                         '(pre-trained on PASCAL VOC)')
+    assert classes is not None
 
     if K.backend() != 'tensorflow':
         raise RuntimeError('The Deeplabv3+ model is only available with '
@@ -348,29 +337,11 @@ def Deeplabv3(weights='pascal_voc', input_shape=(512, 512, 3), classes=21,
     x = SepConv_BN(x, 256, 'decoder_conv1',
                    depth_activation=True, epsilon=1e-5)
 
-    # you can use it with arbitary number of classes
-    if classes == 21:
-        last_layer_name = 'logits_semantic'
-    else:
-        last_layer_name = 'custom_logits_semantic'
-
     x = Conv2D(classes, (1, 1), padding='same', name=last_layer_name)(x)
     x = BilinearUpsampling(output_size=(input_shape[0], input_shape[1]))(x)
 
     model = Model(img_input, x, name='deeplabv3+')
 
-    # load weights
-    #
-    # if weights == 'pascal_voc':
-    #     if backbone == 'xception':
-    #         weights_path = get_file('deeplabv3_xception_tf_dim_ordering_tf_kernels.h5',
-    #                                 WEIGHTS_PATH_X,
-    #                                 cache_subdir='models')
-    #     else:
-    #         weights_path = get_file('deeplabv3_mobilenetv2_tf_dim_ordering_tf_kernels.h5',
-    #                                 WEIGHTS_PATH_MOBILE,
-    #                                 cache_subdir='models')
-    model.load_weights(weights_path, by_name=True, )
     return model
 
 

@@ -2,40 +2,45 @@ from mxnet import gluon
 from mxnet.gluon import nn
 
 
-# import mxnet as mx
-# from mxnet import nd
-
-# import numpy as np
-# from tqdm import tqdm
-
-
 class DeepLabv3p(nn.HybridBlock):
 
-    def __init__(self, classes=21):
+    def __init__(self, OS=16, classes=21):
         super(DeepLabv3p, self).__init__()
 
-        self.entry_flow = EntryFlow(prefix="entry_flow_")
+        if OS == 8:
+            entry_block3_stride = 1
+            middle_block_rate = 2  # ! Not mentioned in paper, but required
+            exit_block_rates = (2, 4)
+            atrous_rates = (12, 24, 36)
+        elif OS == 16:
+            entry_block3_stride = 2
+            middle_block_rate = 1
+            exit_block_rates = (1, 2)
+            atrous_rates = (6, 12, 18)
+        else:
+            raise ValueError
+
+        self.entry_flow = EntryFlow(prefix="entry_flow_", entry_block3_stride=entry_block3_stride)
 
         middle_flow = nn.HybridSequential(prefix="middle_flow_")
         with middle_flow.name_scope():
             for i in range(16):
                 middle_flow.add(XceptionBlock(filters_list=[728, 728, 728], kernel_size=3, strides=1,
-                                              dilation=1, depth_activation=False, in_filters=728,
+                                              dilation=middle_block_rate, depth_activation=False, in_filters=728,
                                               prefix="unit_%s_" % (i + 1)))
         self.middle_flow = middle_flow
 
         exit_flow = nn.HybridSequential(prefix="exit_flow_")
         with exit_flow.name_scope():
-            exit_flow.add(
-                XceptionBlock(filters_list=[728, 1024, 1024], kernel_size=3, strides=1, use_shortcut_conv=True,
-                              dilation=1, depth_activation=False, in_filters=728,
-                              prefix="block1_"))
+            exit_flow.add(XceptionBlock(filters_list=[728, 1024, 1024], kernel_size=3, strides=1,
+                                        use_shortcut_conv=True, dilation=exit_block_rates[0], depth_activation=False,
+                                        in_filters=728, prefix="block1_"))
             exit_flow.add(XceptionBlock(filters_list=[1536, 1536, 2048], kernel_size=3, strides=1,
-                                        dilation=2, depth_activation=True, in_filters=1024, use_shortcut=False,
-                                        prefix="block2_"))
+                                        dilation=exit_block_rates[1], depth_activation=True, in_filters=1024,
+                                        use_shortcut=False, prefix="block2_"))
         self.exit_flow = exit_flow
 
-        self.aspp = ASPP()
+        self.aspp = ASPP(atrous_rates=atrous_rates)
 
         skip_project = nn.HybridSequential()
         skip_project.add(nn.Conv2D(48, kernel_size=1, use_bias=False, prefix='feature_projection0_'))
@@ -69,7 +74,6 @@ class DeepLabv3p(nn.HybridBlock):
 
 
 class SeparableConv(nn.HybridBlock):
-    # TODO: should I fix `epsilon` in BN layer?
 
     def __init__(self, out_filters, kernel_size, strides, dilation, depth_activation, in_filters=None, prefix=None):
         super(SeparableConv, self).__init__(prefix=prefix)
@@ -152,7 +156,7 @@ class XceptionBlock(nn.HybridBlock):
 
 class EntryFlow(nn.HybridBlock):
 
-    def __init__(self, prefix):
+    def __init__(self, prefix, entry_block3_stride):
         super(EntryFlow, self).__init__(prefix)
 
         with self.name_scope():
@@ -171,8 +175,9 @@ class EntryFlow(nn.HybridBlock):
                                        dilation=1, depth_activation=False, in_filters=64, prefix='block1_')
             self.conv4 = XceptionBlock(filters_list=[256, 256, 256], kernel_size=3, strides=2, return_skip=True,
                                        dilation=1, depth_activation=False, in_filters=128, prefix='block2_')
-            self.conv5 = XceptionBlock(filters_list=[728, 728, 728], kernel_size=3, strides=2,
-                                       dilation=1, depth_activation=False, in_filters=256, prefix='block3_')
+            self.conv5 = XceptionBlock(filters_list=[728, 728, 728], kernel_size=3, strides=entry_block3_stride,
+                                       use_shortcut_conv=True, dilation=1, depth_activation=False, in_filters=256,
+                                       prefix='block3_')
 
     def hybrid_forward(self, F, x):
         x = self.conv1(x)
@@ -202,7 +207,7 @@ class PoolRecover(nn.HybridBlock):
 
 class ASPP(nn.HybridBlock):
 
-    def __init__(self):
+    def __init__(self, atrous_rates):
         super(ASPP, self).__init__()
 
         b0 = nn.HybridSequential()
@@ -210,14 +215,16 @@ class ASPP(nn.HybridBlock):
         b0.add(nn.BatchNorm(prefix='aspp0_BN_'))
         b0.add(nn.Activation("relu"))
 
+        rate1, rate2, rate3 = atrous_rates
+
         # rate = 6 (12)
-        b1 = SeparableConv(256, kernel_size=3, strides=1, dilation=6, depth_activation=True,
+        b1 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate1, depth_activation=True,
                            in_filters=2048, prefix='aspp1_')
         # rate = 12 (24)
-        b2 = SeparableConv(256, kernel_size=3, strides=1, dilation=12, depth_activation=True,
+        b2 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate2, depth_activation=True,
                            in_filters=2048, prefix='aspp2_')
         # rate = 18 (36)
-        b3 = SeparableConv(256, kernel_size=3, strides=1, dilation=18, depth_activation=True,
+        b3 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate3, depth_activation=True,
                            in_filters=2048, prefix='aspp3_')
 
         b4 = PoolRecover()
