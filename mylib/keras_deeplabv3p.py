@@ -318,7 +318,8 @@ def Deeplabv3(classes=21, input_shape=(512, 512, 3), OS=16, last_layer_name='log
                use_bias=False, name='concat_projection')(x)
     x = BatchNormalization(name='concat_projection_BN', epsilon=1e-5)(x)
     x = Activation('relu')(x)
-    x = Dropout(0.1)(x)
+    # x = Dropout(0.1)(x)
+    x = Dropout(0.5)(x)
 
     # DeepLab v.3+ decoder
 

@@ -44,15 +44,15 @@ class DeepLabv3p(nn.HybridBlock):
 
         skip_project = nn.HybridSequential()
         skip_project.add(nn.Conv2D(48, kernel_size=1, use_bias=False, prefix='feature_projection0_'))
-        skip_project.add(nn.BatchNorm(prefix='feature_projection0_BN_'))
+        skip_project.add(nn.BatchNorm(prefix='feature_projection0_BN_', epsilon=1e-5))
         skip_project.add(nn.Activation("relu"))
         self.skip_project = skip_project
 
         decoder = nn.HybridSequential()
         decoder.add(SeparableConv(256, kernel_size=3, strides=1, dilation=1, depth_activation=True,
-                                  in_filters=304, prefix='decoder_conv0_'))
+                                  in_filters=304, epsilon=1e-5, prefix='decoder_conv0_'))
         decoder.add(SeparableConv(256, kernel_size=3, strides=1, dilation=1, depth_activation=True,
-                                  in_filters=256, prefix='decoder_conv1_'))
+                                  in_filters=256, epsilon=1e-5, prefix='decoder_conv1_'))
         decoder.add(nn.Conv2D(classes, kernel_size=1, use_bias=True, prefix='logits_semantic_'))
         self.decoder = decoder
 
@@ -75,7 +75,8 @@ class DeepLabv3p(nn.HybridBlock):
 
 class SeparableConv(nn.HybridBlock):
 
-    def __init__(self, out_filters, kernel_size, strides, dilation, depth_activation, in_filters=None, prefix=None):
+    def __init__(self, out_filters, kernel_size, strides, dilation, depth_activation, in_filters=None,
+                 epsilon=1e-3, prefix=None):
         super(SeparableConv, self).__init__(prefix=prefix)
 
         if in_filters is None:
@@ -90,9 +91,9 @@ class SeparableConv(nn.HybridBlock):
                                             dilation=dilation, use_bias=False,
                                             padding=padding, strides=strides,
                                             kernel_size=kernel_size, prefix='depthwise_')
-            self.bn1 = nn.BatchNorm(axis=1, prefix='depthwise_BN_')
+            self.bn1 = nn.BatchNorm(axis=1, epsilon=epsilon, prefix='depthwise_BN_')
             self.pointwise_conv = nn.Conv2D(out_filters, kernel_size=1, use_bias=False, prefix='pointwise_')
-            self.bn2 = nn.BatchNorm(axis=1, prefix='pointwise_BN_')
+            self.bn2 = nn.BatchNorm(axis=1, epsilon=epsilon, prefix='pointwise_BN_')
 
     def hybrid_forward(self, F, x):
         if not self.depth_activation:
@@ -196,7 +197,7 @@ class PoolRecover(nn.HybridBlock):
         self.gap = nn.HybridSequential()
         self.gap.add(nn.GlobalAvgPool2D())
         self.gap.add(nn.Conv2D(256, kernel_size=1, use_bias=False, prefix='image_pooling_'))
-        self.gap.add(nn.BatchNorm(prefix='image_pooling_BN_'))
+        self.gap.add(nn.BatchNorm(prefix='image_pooling_BN_', epsilon=1e-5))
         self.gap.add(nn.Activation("relu"))
 
     def hybrid_forward(self, F, x):
@@ -212,20 +213,20 @@ class ASPP(nn.HybridBlock):
 
         b0 = nn.HybridSequential()
         b0.add(nn.Conv2D(256, kernel_size=1, use_bias=False, prefix='aspp0_'))
-        b0.add(nn.BatchNorm(prefix='aspp0_BN_'))
+        b0.add(nn.BatchNorm(prefix='aspp0_BN_', epsilon=1e-5))
         b0.add(nn.Activation("relu"))
 
         rate1, rate2, rate3 = atrous_rates
 
         # rate = 6 (12)
         b1 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate1, depth_activation=True,
-                           in_filters=2048, prefix='aspp1_')
+                           in_filters=2048, epsilon=1e-5, prefix='aspp1_')
         # rate = 12 (24)
         b2 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate2, depth_activation=True,
-                           in_filters=2048, prefix='aspp2_')
+                           in_filters=2048, epsilon=1e-5, prefix='aspp2_')
         # rate = 18 (36)
         b3 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate3, depth_activation=True,
-                           in_filters=2048, prefix='aspp3_')
+                           in_filters=2048, epsilon=1e-5, prefix='aspp3_')
 
         b4 = PoolRecover()
 
@@ -238,9 +239,10 @@ class ASPP(nn.HybridBlock):
 
         self.project = nn.HybridSequential()
         self.project.add(nn.Conv2D(256, kernel_size=1, use_bias=False, prefix='concat_projection_'))
-        self.project.add(nn.BatchNorm(prefix='concat_projection_BN_'))
+        self.project.add(nn.BatchNorm(prefix='concat_projection_BN_', epsilon=1e-5))
         self.project.add(nn.Activation("relu"))
-        self.project.add(nn.Dropout(0.1))
+        # self.project.add(nn.Dropout(0.1))
+        self.project.add(nn.Dropout(0.5))
 
     def hybrid_forward(self, F, x):
         return self.project(self.concurent(x))

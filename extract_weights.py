@@ -62,6 +62,8 @@ def npy_to_keras(classes, load_from, save_to):
 
     print('Loading weights from', load_from)
     error = 0
+    weight_files = set(os.listdir(load_from))
+
     for layer in tqdm(model.layers):
         if layer.weights:
             try:
@@ -69,15 +71,20 @@ def npy_to_keras(classes, load_from, save_to):
                 for w in layer.weights:
                     weight_name = os.path.basename(w.name).replace(':0', '')
                     weight_file = layer.name + '_' + weight_name + '.npy'
+                    weight_files.remove(weight_file)
                     weight_arr = np.load(os.path.join(load_from, weight_file))
                     weights.append(weight_arr)
                 layer.set_weights(weights)
             except Exception as e:
+                raise e
                 error += 1
                 print("Fail to extract layer weights:", layer.name)
                 print("Due to error:", e)
 
     print('Saving model weights... # error layers:', error)
+    print("Unused: %s weights" % len(weight_files))
+    for weight_file in weight_files:
+        print(weight_file, np.load(os.path.join(load_from, weight_file)).shape)
     model.save_weights(save_to)
     return model
 
@@ -87,9 +94,9 @@ if __name__ == '__main__':
 
     BASE = '/home/jiancheng/code/segmentation/deeplabv3p_gluon/tmp_weights'
 
-    # CKPT = "/home/jiancheng/code/segmentation/deeplabv3p_gluon/workspace/tmptf/deeplabv3_pascal_train_aug/model.ckpt"
-    # FLAG = "pascal_train_aug"
-    # CLASSES = 21
+    CKPT = "/home/jiancheng/code/segmentation/deeplabv3p_gluon/workspace/tmptf/deeplabv3_pascal_train_aug/model.ckpt"
+    FLAG = "pascal_train_aug"
+    CLASSES = 21
 
     # CKPT = "/home/jiancheng/code/segmentation/deeplabv3p_gluon/workspace/tmptf/deeplabv3_pascal_trainval/model.ckpt"
     # FLAG = "pascal_trainval"
@@ -103,9 +110,9 @@ if __name__ == '__main__':
     # FLAG = "ade20k_train"
     # CLASSES = 151
     #
-    CKPT = "/home/jiancheng/code/segmentation/deeplabv3p_gluon/workspace/tmptf/xception/model.ckpt"
-    FLAG = "imagenet_pretrain_for_pascal"
-    CLASSES = 21
+    # CKPT = "/home/jiancheng/code/segmentation/deeplabv3p_gluon/workspace/tmptf/xception/model.ckpt"
+    # FLAG = "imagenet_pretrain_for_pascal"
+    # CLASSES = 21
 
     set_gpu_usage()
 
