@@ -18,5 +18,6 @@ DeepLab v3+ in MXNet Gluon
 * [ ] add training scripts
 * [ ] add multi-gpu training scripts
 * [ ] VOCAug dataset pull request
-* [ ] Model pull request 
+* [ ] Model pull request
+* [ ] Finish pull request to gluoncv 
 

@@ -29,7 +29,7 @@ def test_loader(loader, model):
 
 
 if __name__ == '__main__':
-    SPLIT = 'train'
+    SPLIT = 'val'
     EVALSIZE = 512
     EVALBATCH = 8
     EVALOS = 16
@@ -40,7 +40,6 @@ if __name__ == '__main__':
     dataloader = gluon.data.DataLoader(dataset, batch_size=EVALBATCH)
 
     model = DeepLabv3p(OS=EVALOS)
-    model.initialize(ctx=mx.gpu())
     model.load_params(filename=WEIGHTS, ctx=mx.gpu())
 
     pix_acc, mIoU = test_loader(dataloader, model)
