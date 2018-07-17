@@ -133,23 +133,25 @@ if __name__ == "__main__":
     FLAG = 'finetune_train_aug'
 
     EPOCHS = 50
-    BATCH = 2
+    BATCH = 6
     TEST_BATCH = 16
     TRAIN_SPLIT = 'train_aug'
     TRAIN_OS = 16
     USE_GLOBAL_STATS = True
-    WEIGHTS = '/home/jiancheng/code/segmentation/deeplabv3p_gluon/tmp_weights/pascal_train_aug/pascal_train_aug.params'
+    WEIGHTS = '../weights/pascal_train_aug.params'
+    LR = 1.e-4
 
     trainer = Trainer(flag=FLAG,
                       batch_size=BATCH,
                       epochs=EPOCHS,
                       resume=WEIGHTS,
+                      learning_rate=LR,
                       train_OS=TRAIN_OS,
                       train_split=TRAIN_SPLIT,
                       test_batch_size=TEST_BATCH,
                       use_global_stats=USE_GLOBAL_STATS,
                       checkpoint_interval=10)
-    trainer.validation("INIT")
+    # trainer.validation("INIT")
 
     for epoch in range(EPOCHS):
         trainer.training(epoch)
