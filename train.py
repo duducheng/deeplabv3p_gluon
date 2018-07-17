@@ -1,5 +1,4 @@
 import os
-import shutil
 import numpy as np
 from tqdm import tqdm
 
@@ -15,8 +14,9 @@ from mylib.dataset import VOCAugSegmentation
 
 
 class Trainer(object):
-    def __init__(self, batch_size,
+    def __init__(self, flag, batch_size,
                  use_global_stats=True,
+                 checkpoint_interval=5,
                  epochs=50,
                  learning_rate=1.e-4,
                  momentum=0.9,
@@ -31,6 +31,9 @@ class Trainer(object):
 
         if test_batch_size is None:
             test_batch_size = batch_size
+
+        self.running_flag = flag
+        self.checkpoint_interval = checkpoint_interval
 
         # dataset and dataloader
         train_dataset = VOCAugSegmentation(root=data_root, split=train_split)
@@ -79,20 +82,22 @@ class Trainer(object):
                 loss = losses.mean()
                 mx.nd.waitall()
                 loss.backward()
-                # autograd.backward(losses)
             self.optimizer.step(batch_size=1)  # dummy expression
             train_loss += loss.asscalar()
             tbar.set_description('Epoch %d, training loss %.3f' % (epoch, train_loss / (i + 1)))
             mx.nd.waitall()
+            # break
 
         # save every epoch
-        # save_checkpoint(self.net.module, self.args, False)
+        save_checkpoint(self.running_flag, self.net, epoch, self.checkpoint_interval)
 
     def validation(self, epoch, train=False):
         if train:
             loader = self.train_data
+            flag = "train"
         else:
             loader = self.eval_data
+            flag = 'val'
 
         tbar = tqdm(loader)
         total_inter, total_union, total_correct, total_label = (0,) * 4
@@ -109,35 +114,43 @@ class Trainer(object):
             pix_acc = np.float64(1.0) * total_correct / (np.spacing(1, dtype=np.float64) + total_label)
             IoU = np.float64(1.0) * total_inter / (np.spacing(1, dtype=np.float64) + total_union)
             mIoU = IoU.mean()
-            tbar.set_description('Epoch %s validation, pix_acc: %.4f, mIoU: %.4f' % (epoch, pix_acc, mIoU))
+            tbar.set_description('%s - Epoch %s, pix_acc: %.4f, mIoU: %.4f' % (flag, epoch, pix_acc, mIoU))
             mx.nd.waitall()
+            # break
 
-        # return pix_acc, mIoU
 
-
-#
-#
-# def save_checkpoint(net, args, is_best=False):
-#     """Save Checkpoint"""
-#     directory = "runs/%s/%s/%s/" % (args.dataset, args.model, args.checkname)
-#     if not os.path.exists(directory):
-#         os.makedirs(directory)
-#     filename = 'checkpoint.params'
-#     filename = directory + filename
-#     net.save_params(filename)
-#     if is_best:
-#         shutil.copyfile(filename, directory + 'model_best.params')
+def save_checkpoint(flag, net, epoch, checkpoint_interval):
+    """Save Checkpoint"""
+    directory = "runs/%s" % flag
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    net.save_params(os.path.join(directory, "lastest.params"))
+    if (epoch + 1) % checkpoint_interval == 0:
+        net.save_params(os.path.join(directory, 'checkpoint_%s.params' % (epoch + 1)))
 
 
 if __name__ == "__main__":
+    FLAG = 'finetune_train_aug'
+
     EPOCHS = 50
+    BATCH = 2
+    TEST_BATCH = 16
+    TRAIN_SPLIT = 'train_aug'
+    TRAIN_OS = 16
+    USE_GLOBAL_STATS = True
     WEIGHTS = '/home/jiancheng/code/segmentation/deeplabv3p_gluon/tmp_weights/pascal_train_aug/pascal_train_aug.params'
 
-    trainer = Trainer(batch_size=2, epochs=EPOCHS, resume=WEIGHTS, test_batch_size=16, use_global_stats=True)
-    # trainer.validation("INIT", train=True)
-    # trainer.validation("INIT", train=False)
+    trainer = Trainer(flag=FLAG,
+                      batch_size=BATCH,
+                      epochs=EPOCHS,
+                      resume=WEIGHTS,
+                      train_OS=TRAIN_OS,
+                      train_split=TRAIN_SPLIT,
+                      test_batch_size=TEST_BATCH,
+                      use_global_stats=USE_GLOBAL_STATS,
+                      checkpoint_interval=10)
+    trainer.validation("INIT")
 
     for epoch in range(EPOCHS):
         trainer.training(epoch)
-        trainer.validation(epoch, train=True)
-        trainer.validation(epoch, train=False)
+        trainer.validation(epoch)
