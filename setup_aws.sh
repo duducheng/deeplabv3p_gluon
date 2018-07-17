@@ -1,4 +1,4 @@
-source activate mxnet-p36
+source activate mxnet_p36
 pip install mxnet-cu90
 pip install gluoncv
 

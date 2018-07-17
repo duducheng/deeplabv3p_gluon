@@ -15,7 +15,7 @@ DeepLab v3+ in MXNet Gluon
 * [x] transfer all the weights
 * [x] add OS=8
 * [x] test iou on PASCAL val
-* [ ] add training scripts
+* [x] add training scripts
 * [ ] add multi-gpu training scripts
 * [ ] VOCAug dataset pull request
 * [ ] Model pull request
