@@ -90,7 +90,10 @@ def npy_to_keras(classes, load_from, save_to):
 
 
 if __name__ == '__main__':
-    '''Note: if there is gpu memory error, use cpu runtime instead.'''
+    '''Note: if there is gpu memory error, use cpu runtime instead.
+    Official model release:
+    https://github.com/tensorflow/models/blob/57eb3e77319ebce918b770801e0a5a4e3639593c/research/deeplab/g3doc/model_zoo.md
+    '''
 
     BASE = '/home/jiancheng/code/segmentation/deeplabv3p_gluon/tmp_weights'
 

@@ -32,8 +32,8 @@ if __name__ == '__main__':
     SPLIT = 'val'
     EVALSIZE = 512
     EVALBATCH = 8
-    EVALOS = 16
-    WEIGHTS = '/home/jiancheng/code/segmentation/deeplabv3p_gluon/tmp_weights/pascal_train_aug/pascal_train_aug.params'
+    EVALOS = 8
+    WEIGHTS = '/home/jiancheng/Downloads/checkpoint_10.params'
 
     dataset = VOCAugSegmentation(split=SPLIT, crop_size=EVALSIZE, mode='val',
                                  transform=lambda x: x.transpose((2, 0, 1)) / 127.5 - 1.)

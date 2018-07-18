@@ -88,9 +88,6 @@ class Trainer(object):
             mx.nd.waitall()
             # break
 
-        # save every epoch
-        save_checkpoint(self.running_flag, self.net, epoch, self.checkpoint_interval)
-
     def validation(self, epoch, train=False):
         if train:
             loader = self.train_data
@@ -118,8 +115,13 @@ class Trainer(object):
             mx.nd.waitall()
             # break
 
+        return pix_acc, mIoU
 
-def save_checkpoint(flag, net, epoch, checkpoint_interval):
+    def save_checkpoint(self, epoch, is_best=False):
+        save_checkpoint(self.running_flag, self.net, epoch, self.checkpoint_interval, is_best)
+
+
+def save_checkpoint(flag, net, epoch, checkpoint_interval, is_best=False):
     """Save Checkpoint"""
     directory = "runs/%s" % flag
     if not os.path.exists(directory):
@@ -127,10 +129,14 @@ def save_checkpoint(flag, net, epoch, checkpoint_interval):
     net.save_params(os.path.join(directory, "lastest.params"))
     if (epoch + 1) % checkpoint_interval == 0:
         net.save_params(os.path.join(directory, 'checkpoint_%s.params' % (epoch + 1)))
+        print("Checkpoint saved.")
+    if is_best:
+        net.save_params(os.path.join(directory, 'best.params'))
+        print("Best model saved.")
 
 
 if __name__ == "__main__":
-    FLAG = 'finetune_train_aug'
+    FLAG = 'finetune_train_aug_best'
 
     EPOCHS = 50
     BATCH = 6
@@ -138,8 +144,11 @@ if __name__ == "__main__":
     TRAIN_SPLIT = 'train_aug'
     TRAIN_OS = 16
     USE_GLOBAL_STATS = True
-    WEIGHTS = '../weights/pascal_train_aug.params'
+    DATA_ROOT = os.path.expanduser('~/.mxnet/datasets/voc')
+    # WEIGHTS = '../weights/pascal_train_aug.params'
+    WEIGHTS = 'runs/finetune_train_aug/checkpoint_10.params'
     LR = 1.e-4
+    CHECKPOINT_INTERVAL = 3
 
     trainer = Trainer(flag=FLAG,
                       batch_size=BATCH,
@@ -150,9 +159,17 @@ if __name__ == "__main__":
                       train_split=TRAIN_SPLIT,
                       test_batch_size=TEST_BATCH,
                       use_global_stats=USE_GLOBAL_STATS,
-                      checkpoint_interval=10)
-    trainer.validation("INIT")
+                      data_root=DATA_ROOT,
+                      checkpoint_interval=CHECKPOINT_INTERVAL)
+    _, best_mIoU = trainer.validation("INIT")
 
     for epoch in range(EPOCHS):
         trainer.training(epoch)
-        trainer.validation(epoch)
+        _, mIoU = trainer.validation(epoch)
+        if mIoU > best_mIoU:
+            best_mIoU = mIoU
+            is_best = True
+            print("A new best! mIoU = %.4f" % mIoU)
+        else:
+            is_best = False
+        trainer.save_checkpoint(epoch, is_best=is_best)
