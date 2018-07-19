@@ -1,8 +1,8 @@
 from mxnet import gluon
 from mxnet.gluon import nn
 
-from gluoncv.model_zoo.segbase import SegBaseModel
 from gluoncv.utils.metrics import voc_segmentation
+
 
 class DeepLabv3p(nn.HybridBlock):
 
@@ -32,7 +32,8 @@ class DeepLabv3p(nn.HybridBlock):
             for i in range(16):
                 middle_flow.add(XceptionBlock(filters_list=[728, 728, 728], kernel_size=3, strides=1,
                                               dilation=middle_block_rate, depth_activation=False, in_filters=728,
-                                            norm_layer=norm_layer, use_global_stats=use_global_stats, prefix="unit_%s_" % (i + 1)))
+                                              norm_layer=norm_layer, use_global_stats=use_global_stats,
+                                              prefix="unit_%s_" % (i + 1)))
         self.middle_flow = middle_flow
 
         exit_flow = nn.HybridSequential(prefix="exit_flow_")
@@ -40,9 +41,10 @@ class DeepLabv3p(nn.HybridBlock):
             exit_flow.add(XceptionBlock(filters_list=[728, 1024, 1024], kernel_size=3, strides=1, norm_layer=norm_layer,
                                         use_shortcut_conv=True, dilation=exit_block_rates[0], depth_activation=False,
                                         use_global_stats=use_global_stats, in_filters=728, prefix="block1_"))
-            exit_flow.add(XceptionBlock(filters_list=[1536, 1536, 2048], kernel_size=3, strides=1, norm_layer=norm_layer,
-                                        dilation=exit_block_rates[1], depth_activation=True, in_filters=1024,
-                                        use_global_stats=use_global_stats, use_shortcut=False, prefix="block2_"))
+            exit_flow.add(
+                XceptionBlock(filters_list=[1536, 1536, 2048], kernel_size=3, strides=1, norm_layer=norm_layer,
+                              dilation=exit_block_rates[1], depth_activation=True, in_filters=1024,
+                              use_global_stats=use_global_stats, use_shortcut=False, prefix="block2_"))
         self.exit_flow = exit_flow
 
         self.aspp = ASPP(atrous_rates=atrous_rates, use_global_stats=use_global_stats, norm_layer=norm_layer)
@@ -50,14 +52,14 @@ class DeepLabv3p(nn.HybridBlock):
         skip_project = nn.HybridSequential()
         skip_project.add(nn.Conv2D(48, kernel_size=1, use_bias=False, prefix='feature_projection0_'))
         skip_project.add(norm_layer(prefix='feature_projection0_BN_', epsilon=1e-5,
-                                      use_global_stats=use_global_stats,in_channels=48))
+                                    use_global_stats=use_global_stats, in_channels=48))
         skip_project.add(nn.Activation("relu"))
         self.skip_project = skip_project
 
         decoder = nn.HybridSequential()
         decoder.add(SeparableConv(256, kernel_size=3, strides=1, dilation=1, depth_activation=True,
                                   use_global_stats=use_global_stats, in_filters=304, epsilon=1e-5,
-                                   norm_layer=norm_layer, prefix='decoder_conv0_'))
+                                  norm_layer=norm_layer, prefix='decoder_conv0_'))
         decoder.add(SeparableConv(256, kernel_size=3, strides=1, dilation=1, depth_activation=True,
                                   use_global_stats=use_global_stats, in_filters=256, epsilon=1e-5,
                                   norm_layer=norm_layer, prefix='decoder_conv1_'))
@@ -80,7 +82,6 @@ class DeepLabv3p(nn.HybridBlock):
 
         return F.contrib.BilinearResize2D(x, height=h, width=w)
 
-    
     def evaluate(self, x, target=None):
         """evaluating network with inputs and targets"""
         pred = self.forward(x)
@@ -111,9 +112,11 @@ class SeparableConv(nn.HybridBlock):
                                             dilation=dilation, use_bias=False,
                                             padding=padding, strides=strides,
                                             kernel_size=kernel_size, prefix='depthwise_')
-            self.bn1 = norm_layer(in_channels=in_filters,epsilon=epsilon, use_global_stats=use_global_stats, prefix='depthwise_BN_')
+            self.bn1 = norm_layer(in_channels=in_filters, epsilon=epsilon, use_global_stats=use_global_stats,
+                                  prefix='depthwise_BN_')
             self.pointwise_conv = nn.Conv2D(out_filters, kernel_size=1, use_bias=False, prefix='pointwise_')
-            self.bn2 = norm_layer(in_channels=out_filters, epsilon=epsilon, use_global_stats=use_global_stats, prefix='pointwise_BN_')
+            self.bn2 = norm_layer(in_channels=out_filters, epsilon=epsilon, use_global_stats=use_global_stats,
+                                  prefix='pointwise_BN_')
 
     def hybrid_forward(self, F, x):
         if not self.depth_activation:
@@ -131,10 +134,10 @@ class SeparableConv(nn.HybridBlock):
 
 class XceptionBlock(nn.HybridBlock):
 
-    def __init__(self, filters_list, kernel_size, strides, 
-                dilation, depth_activation, use_global_stats, norm_layer,
-                in_filters=None, use_shortcut_conv=None, prefix=None,
-                return_skip=False, use_shortcut=True):
+    def __init__(self, filters_list, kernel_size, strides,
+                 dilation, depth_activation, use_global_stats, norm_layer,
+                 in_filters=None, use_shortcut_conv=None, prefix=None,
+                 return_skip=False, use_shortcut=True):
         super(XceptionBlock, self).__init__(prefix=prefix)
 
         assert len(filters_list) == 3
@@ -151,11 +154,13 @@ class XceptionBlock(nn.HybridBlock):
             self.conv2 = SeparableConv(filters_list[1], kernel_size, 1, dilation, depth_activation, use_global_stats,
                                        norm_layer=norm_layer, in_filters=filters_list[0], prefix='separable_conv2_')
             self.conv3 = SeparableConv(filters_list[2], kernel_size, strides, dilation, depth_activation,
-                                       use_global_stats,norm_layer=norm_layer,  in_filters=filters_list[1], prefix='separable_conv3_')
+                                       use_global_stats, norm_layer=norm_layer, in_filters=filters_list[1],
+                                       prefix='separable_conv3_')
             if use_shortcut_conv:
                 self.shortcut_conv = nn.Conv2D(filters_list[2], kernel_size=1, strides=strides, use_bias=False,
                                                prefix='shortcut_')
-                self.shortcut_bn = norm_layer(in_channels=filters_list[2], use_global_stats=use_global_stats, prefix='shortcut_BN_')
+                self.shortcut_bn = norm_layer(in_channels=filters_list[2], use_global_stats=use_global_stats,
+                                              prefix='shortcut_BN_')
 
         self.use_shortcut_conv = use_shortcut_conv
         self.use_shortcut = use_shortcut
@@ -215,13 +220,14 @@ class EntryFlow(nn.HybridBlock):
 
 class PoolRecover(nn.HybridBlock):
 
-    def __init__(self, use_global_stats,norm_layer):
+    def __init__(self, use_global_stats, norm_layer):
         super(PoolRecover, self).__init__()
 
         self.gap = nn.HybridSequential()
         self.gap.add(nn.GlobalAvgPool2D())
         self.gap.add(nn.Conv2D(256, kernel_size=1, use_bias=False, prefix='image_pooling_'))
-        self.gap.add(norm_layer(in_channels=256, prefix='image_pooling_BN_', use_global_stats=use_global_stats, epsilon=1e-5))
+        self.gap.add(
+            norm_layer(in_channels=256, prefix='image_pooling_BN_', use_global_stats=use_global_stats, epsilon=1e-5))
         self.gap.add(nn.Activation("relu"))
 
     def hybrid_forward(self, F, x):
@@ -243,13 +249,13 @@ class ASPP(nn.HybridBlock):
         rate1, rate2, rate3 = atrous_rates
 
         # rate = 6 (12)
-        b1 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate1, depth_activation=True,norm_layer=norm_layer,
+        b1 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate1, depth_activation=True, norm_layer=norm_layer,
                            use_global_stats=use_global_stats, in_filters=2048, epsilon=1e-5, prefix='aspp1_')
         # rate = 12 (24)
-        b2 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate2, depth_activation=True,norm_layer=norm_layer,
+        b2 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate2, depth_activation=True, norm_layer=norm_layer,
                            use_global_stats=use_global_stats, in_filters=2048, epsilon=1e-5, prefix='aspp2_')
         # rate = 18 (36)
-        b3 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate3, depth_activation=True,norm_layer=norm_layer,
+        b3 = SeparableConv(256, kernel_size=3, strides=1, dilation=rate3, depth_activation=True, norm_layer=norm_layer,
                            use_global_stats=use_global_stats, in_filters=2048, epsilon=1e-5, prefix='aspp3_')
 
         b4 = PoolRecover(use_global_stats=use_global_stats, norm_layer=norm_layer)
@@ -263,7 +269,8 @@ class ASPP(nn.HybridBlock):
 
         self.project = nn.HybridSequential()
         self.project.add(nn.Conv2D(256, kernel_size=1, use_bias=False, prefix='concat_projection_'))
-        self.project.add(norm_layer(in_channels=256, prefix='concat_projection_BN_', use_global_stats=use_global_stats, epsilon=1e-5))
+        self.project.add(norm_layer(in_channels=256, prefix='concat_projection_BN_', use_global_stats=use_global_stats,
+                                    epsilon=1e-5))
         self.project.add(nn.Activation("relu"))
         # self.project.add(nn.Dropout(0.1))
         self.project.add(nn.Dropout(0.5))
