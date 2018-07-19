@@ -2,14 +2,14 @@
 DeepLab v3+ in MXNet Gluon (WIP)
 
 # Note
-* [`workspace`](workspace/): the notebooks I did experiments, with messy staffs.
+* [`workspace`](workspace/): the notebooks where I did experiments, with messy staffs.
 * [`mylib`](mylib/): the well organized "lib-style" code.
 * GPU version only, but it should be modified easily into a CPU version.
 * My running environments, not tested with other environments:
     * Python==3.6
     * TensorFlow==1.4.0
     * Keras==2.1.5
-    * MXNet==1.2.0
+    * MXNet==1.2.0 (MXNet master version for multi-gpu `SyncBatchNorm`)
     
 # Models
 Official model release from [here](https://github.com/tensorflow/models/blob/57eb3e77319ebce918b770801e0a5a4e3639593c/research/deeplab/g3doc/model_zoo.md).

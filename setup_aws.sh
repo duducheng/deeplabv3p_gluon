@@ -1,5 +1,11 @@
 source activate mxnet_p36
-pip install mxnet-cu90
+
+git clone --recursive https://github.com/apache/incubator-mxnet
+cd incubator-mxnet
+make -j $(nproc) USE_OPENCV=1 USE_BLAS=openblas USE_CUDA=1 USE_CUDA_PATH=/usr/local/cuda USE_CUDNN=1
+cd python
+pip install -e .
+
 pip install gluoncv
 
 cd ~

@@ -6,12 +6,13 @@ import mxnet as mx
 from mxnet import gluon, autograd
 
 from gluoncv.utils import LRScheduler
-from gluoncv.utils.metrics.voc_segmentation import batch_pix_accuracy, batch_intersection_union
 from gluoncv.model_zoo.segbase import SoftmaxCrossEntropyLoss, SegEvalModel
 from gluoncv.utils.parallel import DataParallelModel, DataParallelCriterion
 
 from mylib.deeplabv3p import DeepLabv3p
 from mylib.dataset import VOCAugSegmentation
+
+assert mx.__version__ == "1.3.0", "This scripts only work for MXNet==1.3.0, got: %s" % mx.__version__
 
 
 class Trainer(object):
@@ -29,7 +30,7 @@ class Trainer(object):
                  test_batch_size=None,
                  data_root=os.path.expanduser('~/.mxnet/datasets/voc'),
                  ctx=[mx.gpu()],
-                 norm_layer = gluon.nn.BatchNorm,
+                 norm_layer=gluon.nn.BatchNorm,
                  num_workers=4):
 
         if test_batch_size is None:
@@ -54,7 +55,7 @@ class Trainer(object):
         # resume checkpoint if needed
         if resume is not None:
             if os.path.isfile(resume):
-                model.load_params(resume, ctx=ctx)
+                model.load_parameters(resume, ctx=ctx)
             else:
                 raise RuntimeError("=> no checkpoint found at '{}'".format(resume))
         else:
@@ -87,7 +88,7 @@ class Trainer(object):
                 autograd.backward(losses)
             for loss in losses:
                 train_loss += loss.asnumpy()[0] / len(losses)
-            self.optimizer.step(batch_size=self.batch_size) 
+            self.optimizer.step(batch_size=self.batch_size)
             tbar.set_description('Epoch %d, training loss %.3f' % (epoch, train_loss / (i + 1)))
             mx.nd.waitall()
             # break
@@ -112,8 +113,8 @@ class Trainer(object):
             pixAcc = 1.0 * total_correct / (np.spacing(1) + total_label)
             IoU = 1.0 * total_inter / (np.spacing(1) + total_union)
             mIoU = IoU.mean()
-            tbar.set_description('Epoch %s, validation pixAcc: %.4f, mIoU: %.4f'%\
-                (epoch, pixAcc, mIoU))
+            tbar.set_description('Epoch %s, validation pixAcc: %.4f, mIoU: %.4f' % \
+                                 (epoch, pixAcc, mIoU))
             mx.nd.waitall()
 
         return pixAcc, mIoU
@@ -127,12 +128,12 @@ def save_checkpoint(flag, net, epoch, checkpoint_interval, is_best=False):
     directory = "runs/%s" % flag
     if not os.path.exists(directory):
         os.makedirs(directory)
-    net.save_params(os.path.join(directory, "lastest.params"))
+    net.save_parameters(os.path.join(directory, "lastest.params"))
     if (epoch + 1) % checkpoint_interval == 0:
-        net.save_params(os.path.join(directory, 'checkpoint_%s.params' % (epoch + 1)))
+        net.save_parameters(os.path.join(directory, 'checkpoint_%s.params' % (epoch + 1)))
         print("Checkpoint saved.")
     if is_best:
-        net.save_params(os.path.join(directory, 'best.params'))
+        net.save_parameters(os.path.join(directory, 'best.params'))
         print("Best model saved.")
 
 
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     TEST_BATCH = 64
     TRAIN_SPLIT = 'train_aug'
     TRAIN_OS = 16
-    USE_GLOBAL_STATS = True
+    USE_GLOBAL_STATS = False
     # DATA_ROOT = os.path.expanduser('~/myDataset/voc')
     DATA_ROOT = os.path.expanduser('~/.mxnet/datasets/voc')
     WEIGHTS = '../weights/pascal_train_aug.params'
@@ -168,11 +169,11 @@ if __name__ == "__main__":
                       train_split=TRAIN_SPLIT,
                       test_batch_size=TEST_BATCH,
                       use_global_stats=USE_GLOBAL_STATS,
-                      ctx=ctx, 
+                      ctx=ctx,
                       norm_layer=norm_layer,
                       data_root=DATA_ROOT,
                       checkpoint_interval=CHECKPOINT_INTERVAL)
-    
+
     _, best_mIoU = trainer.validation("INIT")
     # best_mIoU = 0
 
