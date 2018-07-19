@@ -116,7 +116,7 @@ class Trainer(object):
                 (epoch, pixAcc, mIoU))
             mx.nd.waitall()
 
-        return pix_acc, mIoU
+        return pixAcc, mIoU
 
     def save_checkpoint(self, epoch, is_best=False):
         save_checkpoint(self.running_flag, self.net.module, epoch, self.checkpoint_interval, is_best)
