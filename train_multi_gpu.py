@@ -142,6 +142,15 @@ if __name__ == "__main__":
     USE_GLOBAL_STATS = True
     WEIGHTS = '../weights/pascal_train_aug.params'
     LR = 1.e-4
+    N_GPUS = 1
+
+    if N_GPUS == 1:
+        norm_layer = gluon.nn.BatchNorm
+        ctx = mx.gpu()
+    else:
+        from gluoncv.model_zoo.syncbn import BatchNorm
+        norm_layer = mx.gluon.nn.BatchNorm
+        ctx = [mx.gpu(i) for i in range(N_GPUS)]
 
     trainer = Trainer(flag=FLAG,
                       batch_size=BATCH,

@@ -139,14 +139,14 @@ if __name__ == "__main__":
     FLAG = 'finetune_train_aug_best'
 
     EPOCHS = 50
-    BATCH = 6
+    BATCH = 4
     TEST_BATCH = 16
     TRAIN_SPLIT = 'train_aug'
     TRAIN_OS = 16
     USE_GLOBAL_STATS = True
-    DATA_ROOT = os.path.expanduser('~/.mxnet/datasets/voc')
+    DATA_ROOT = os.path.expanduser('~/myDataset/voc')
     # WEIGHTS = '../weights/pascal_train_aug.params'
-    WEIGHTS = 'runs/finetune_train_aug/checkpoint_10.params'
+    WEIGHTS = '../weights/checkpoint_10.params'
     LR = 1.e-4
     CHECKPOINT_INTERVAL = 3
 
@@ -161,6 +161,7 @@ if __name__ == "__main__":
                       use_global_stats=USE_GLOBAL_STATS,
                       data_root=DATA_ROOT,
                       checkpoint_interval=CHECKPOINT_INTERVAL)
+    
     _, best_mIoU = trainer.validation("INIT")
 
     for epoch in range(EPOCHS):
