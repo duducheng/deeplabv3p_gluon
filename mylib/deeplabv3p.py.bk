@@ -111,9 +111,9 @@ class SeparableConv(nn.HybridBlock):
                                             dilation=dilation, use_bias=False,
                                             padding=padding, strides=strides,
                                             kernel_size=kernel_size, prefix='depthwise_')
-            self.bn1 = norm_layer(in_channels=in_filters,epsilon=epsilon, use_global_stats=use_global_stats, prefix='depthwise_BN_')
+            self.bn1 = norm_layer(in_channels=in_filters,axis=1, epsilon=epsilon, use_global_stats=use_global_stats, prefix='depthwise_BN_')
             self.pointwise_conv = nn.Conv2D(out_filters, kernel_size=1, use_bias=False, prefix='pointwise_')
-            self.bn2 = norm_layer(in_channels=out_filters, epsilon=epsilon, use_global_stats=use_global_stats, prefix='pointwise_BN_')
+            self.bn2 = norm_layer(in_channels=out_filters, axis=1, epsilon=epsilon, use_global_stats=use_global_stats, prefix='pointwise_BN_')
 
     def hybrid_forward(self, F, x):
         if not self.depth_activation:
@@ -155,7 +155,7 @@ class XceptionBlock(nn.HybridBlock):
             if use_shortcut_conv:
                 self.shortcut_conv = nn.Conv2D(filters_list[2], kernel_size=1, strides=strides, use_bias=False,
                                                prefix='shortcut_')
-                self.shortcut_bn = norm_layer(in_channels=filters_list[2], use_global_stats=use_global_stats, prefix='shortcut_BN_')
+                self.shortcut_bn = norm_layer(in_channels=filters_list[2], axis=1, use_global_stats=use_global_stats, prefix='shortcut_BN_')
 
         self.use_shortcut_conv = use_shortcut_conv
         self.use_shortcut = use_shortcut
@@ -186,12 +186,12 @@ class EntryFlow(nn.HybridBlock):
             self.conv1 = nn.HybridSequential(prefix='conv1_')
             with self.conv1.name_scope():
                 self.conv1.add(nn.Conv2D(32, kernel_size=3, strides=2, padding=1, use_bias=False, prefix='1_'))
-                self.conv1.add(norm_layer(in_channels=32, use_global_stats=use_global_stats, prefix='1_BN_'))
+                self.conv1.add(norm_layer(in_channels=32, axis=1, use_global_stats=use_global_stats, prefix='1_BN_'))
                 self.conv1.add(nn.Activation("relu"))
             self.conv2 = nn.HybridSequential(prefix='conv1_')
             with self.conv2.name_scope():
                 self.conv2.add(nn.Conv2D(64, kernel_size=3, padding=1, use_bias=False, prefix='2_'))
-                self.conv2.add(norm_layer(in_channels=64, use_global_stats=use_global_stats, prefix='2_BN_'))
+                self.conv2.add(norm_layer(in_channels=64, axis=1, use_global_stats=use_global_stats, prefix='2_BN_'))
                 self.conv2.add(nn.Activation("relu"))
 
             self.conv3 = XceptionBlock(filters_list=[128, 128, 128], kernel_size=3, strides=2,
