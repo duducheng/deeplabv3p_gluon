@@ -35,3 +35,8 @@ My porting on Pascal VOC validation:
 * [ ] Model pull request
 * [ ] Finish pull request to gluoncv 
 
+# Acknowledge
+This repository is a part of *MXNet summer code* hosted by AWS, TuSimple and Jiangmen. 
+Specifically, I would like to thank Hengchen Dai (@TuSimple) and Hang Zhang (@AWS) for 
+kind suggestions on tuning and implementation. Plus, I would like to thank AWS for 
+providing generous credits for tuning the computationally intensive models. 
