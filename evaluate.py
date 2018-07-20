@@ -32,7 +32,7 @@ if __name__ == '__main__':
     SPLIT = 'val'
     EVALSIZE = 512
     EVALBATCH = 8
-    EVALOS = 16
+    EVALOS = 8
     WEIGHTS = '/home/jiancheng/Downloads/best.params'
 
     dataset = VOCAugSegmentation(split=SPLIT, crop_size=EVALSIZE, mode='val',
