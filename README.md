@@ -6,6 +6,7 @@ DeepLab v3+ in MXNet Gluon
 * [`train.py`](train.py): single-gpu training on Pascal VOC dataset, with validation.
 * [`evaluate.py`](evaluate.py): single-gpu evaluation on Pascal VOC validation. 
 * [`extract_weights.py`](extract_weights.py): convert the weights from official model [release](https://github.com/tensorflow/models/blob/57eb3e77319ebce918b770801e0a5a4e3639593c/research/deeplab/g3doc/model_zoo.md).
+* [`mylib`](mylib/): lib-style clean code.
 * [`workspace`](workspace/): the notebooks where I did experiments, with messy staffs (ignore them).
 * GPU version only, but it should be modified easily into a CPU version.
 * My running environments, not tested with other environments:
