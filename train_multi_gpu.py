@@ -12,7 +12,7 @@ from gluoncv.utils.parallel import DataParallelModel, DataParallelCriterion
 from mylib.deeplabv3p import DeepLabv3p
 from mylib.dataset import VOCAugSegmentation
 
-assert mx.__version__ == "1.3.0", "This scripts only work for MXNet==1.3.0, got: %s" % mx.__version__
+assert mx.__version__ == "1.3.0", "This script only work for MXNet==1.3.0, got: %s" % mx.__version__
 
 
 class Trainer(object):
@@ -22,7 +22,7 @@ class Trainer(object):
                  epochs=50,
                  learning_rate=1.e-4,
                  momentum=0.9,
-                 weight_decay=1.e-4,
+                 weight_decay=4.e-5,
                  train_OS=16,
                  train_split='train_aug',
                  val_split='val',
