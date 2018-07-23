@@ -105,6 +105,7 @@ class Trainer(object):
         total_inter, total_union, total_correct, total_label = (0,) * 4
         for i, (x, y) in enumerate(tbar):
             outputs = self.evaluator(x, y)
+            mx.nd.waitall() #TODO: should I sync here?
             for (correct, labeled, inter, union) in outputs:
                 total_correct += correct
                 total_label += labeled
@@ -113,8 +114,8 @@ class Trainer(object):
             pixAcc = 1.0 * total_correct / (np.spacing(1) + total_label)
             IoU = 1.0 * total_inter / (np.spacing(1) + total_union)
             mIoU = IoU.mean()
-            tbar.set_description('Epoch %s, validation pixAcc: %.4f, mIoU: %.4f' % \
-                                 (epoch, pixAcc, mIoU))
+            tbar.set_description('%s - Epoch %s, validation pixAcc: %.4f, mIoU: %.4f' % \
+                                 (flag, epoch, pixAcc, mIoU))
             mx.nd.waitall()
 
         return pixAcc, mIoU

@@ -9,10 +9,8 @@ pip install -e .
 pip install gluoncv
 
 cd ~
-git clone https://github.com/dmlc/gluon-cv
-git clone https://github.com/duducheng/deeplabv3p_gluon
 mkdir weights
-
+git clone https://github.com/dmlc/gluon-cv
 cd gluon-cv/scripts/datasets
 python pascal_voc.py
 
@@ -28,4 +26,7 @@ gdrive_download 19zxsJ6tmPuJcEBd-P93yCEFMLc7o4dPP pascal_train_aug.params
 gdrive_download 15kZ90a0Fnz4j7XryHb41gNVzFtecHqLR pascal_trainval.params
 gdrive_download 1XAtN7My93Zk4p23kryp4ytFvvQKwU7RO imagenet_pretrain_for_voc.params
 
+git clone https://github.com/duducheng/deeplabv3p_gluon
 
+pip uninstall -y mxnet-cu90mkl
+python -c "import mxnet; print(mxnet.__version__)"
