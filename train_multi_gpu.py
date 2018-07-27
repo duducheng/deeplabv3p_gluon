@@ -105,7 +105,6 @@ class Trainer(object):
         total_inter, total_union, total_correct, total_label = (0,) * 4
         for i, (x, y) in enumerate(tbar):
             outputs = self.evaluator(x, y)
-            mx.nd.waitall() #TODO: should I sync here?
             for (correct, labeled, inter, union) in outputs:
                 total_correct += correct
                 total_label += labeled
@@ -156,10 +155,10 @@ if __name__ == "__main__":
 
     if N_GPUS == 1:
         norm_layer = gluon.nn.BatchNorm
-        ctx = [mx.gpu()]
     else:
         norm_layer = gluon.contrib.nn.SyncBatchNorm
-        ctx = [mx.gpu(i) for i in range(N_GPUS)]
+        
+    ctx = [mx.gpu(i) for i in range(N_GPUS)]
 
     trainer = Trainer(flag=FLAG,
                       batch_size=BATCH,

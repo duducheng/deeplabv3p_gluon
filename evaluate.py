@@ -33,7 +33,7 @@ if __name__ == '__main__':
     EVALSIZE = 512
     EVALBATCH = 8
     EVALOS = 8
-    WEIGHTS = '/home/jiancheng/Downloads/best.params'
+    WEIGHTS = '/home/jiancheng/Downloads/os8.params'
 
     dataset = VOCAugSegmentation(split=SPLIT, crop_size=EVALSIZE, mode='val',
                                  transform=lambda x: x.transpose((2, 0, 1)) / 127.5 - 1.)
