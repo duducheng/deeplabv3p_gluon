@@ -47,12 +47,12 @@ Measured with fixing batch stats (`use_global_stats=True`), just for reference.
 * [x] add training scripts
 * [x] add multi-gpu training scripts
 * [ ] train more and open source the best models
-* [ ] VOCAug dataset pull request
-* [ ] Model pull request
-* [ ] Finish pull request to gluoncv 
+* [ ] ~~VOCAug dataset pull request~~
+* [ ] ~~Model pull request~~
+* [ ] ~~Finish pull request to gluoncv~~
 
 # Acknowledge
 This repository is a part of *MXNet summer code* hosted by AWS, TuSimple and Jiangmen. 
-Specifically, I would like to thank Hengchen Dai (@TuSimple) and Hang Zhang (@AWS) for 
+Specifically, I would like to thank [Hang Zhang](https://github.com/zhanghang1989) (@AWS) and Hengchen Dai (@TuSimple) for 
 kind suggestions on tuning and implementation. Plus, I would like to thank AWS for 
 providing generous credits for tuning the computationally intensive models. 
