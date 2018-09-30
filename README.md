@@ -30,7 +30,7 @@ My porting on Pascal VOC validation:
 |[xception_coco_voc_trainaug (MXNet porting)](https://drive.google.com/open?id=19zxsJ6tmPuJcEBd-P93yCEFMLc7o4dPP)| 16 (w/o) <br> 8 (w/o) |79.19<br>81.82|
 |[xception_coco_voc_trainaug (MXNet finetune TrainOS=16)](https://drive.google.com/open?id=1zusHNnPgpJAapPNEFu6FVWFqDm-_6_CZ)| 16 (w/o) <br> 8 (w/o) |82.75<br>82.56|
 |[xception_coco_voc_trainaug (MXNet finetune TrainOS=8)](https://drive.google.com/open?id=1EG-6OwNU0JxDj-zBhMdGji3x8dIOK9jW)| 16 (w/o) <br> 8 (w/o) |82.02<br>83.14|
-|xception_voc_trainaug | 16 (w/o) <br> 8 (w/o) |?<br>?|
+|[xception_voc_trainaug](https://drive.google.com/open?id=1a4f1e_GZ3FRPVKYrgDtmmRIYmtNTywyl) <br> ImageNet pretrained only ,without MSCOCO pretraining | 16 (w/o) <br> 8 (w/o) |77.06<br>76.44|
 
 # AWS Runtime & Cost
 Measured with fixing batch stats (`use_global_stats=True`), just for reference.
